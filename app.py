@@ -13,27 +13,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Base de Usuários Cadastrados
-USUARIOS = {
-    "genilson moura barros": {
-        "senha": "GMB#2026",
-        "nome": "Genilson Moura Barros",
-        "funcao": "Supervisor Técnico",
-        "unidade": "ETEB SESC Bertioga"
-    },
-    "operador02": {
-        "senha": "Op2_ETEB#2026",
-        "nome": "Operador ETEB 02",
-        "funcao": "Técnico de Operação",
-        "unidade": "ETEB SESC Bertioga"
-    }
-}
+# Senha Única de Desbloqueio do Sistema
+SENHA_MESTRE = "bertioga2026"
 
 # Inicialização do Estado da Sessão
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
-if "usuario_atual" not in st.session_state:
-    st.session_state.usuario_atual = None
 if "nota_quiz" not in st.session_state:
     st.session_state.nota_quiz = None
 if "aprovado" not in st.session_state:
@@ -101,7 +86,7 @@ def gerar_pdf_certificado(nome, funcao, unidade, nota):
     pdf.output(nome_arquivo)
     return nome_arquivo
 
-# --- TELA DE LOGIN ---
+# --- TELA DE LOGIN (SENHA ÚNICA) ---
 if not st.session_state.autenticado:
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
@@ -110,35 +95,36 @@ if not st.session_state.autenticado:
             st.markdown(f"<div style='text-align:center;'><img src='{logo_base64}' width='180'></div>", unsafe_allow_html=True)
         
         st.markdown("<h2 style='text-align: center; color: #0284c7;'>Tecwater Systems</h2>", unsafe_allow_html=True)
-        st.markdown("<h4 style='text-align: center;'>Identificação do Colaborador - ETEB SESC Bertioga</h4>", unsafe_allow_html=True)
+        st.markdown("<h4 style='text-align: center;'>Acesso Restrito - ETEB SESC Bertioga</h4>", unsafe_allow_html=True)
 
         with st.form("login_form"):
-            usuario_input = st.text_input("Usuário / Matrícula").strip().lower()
-            senha_input = st.text_input("Senha Individual", type="password")
-            btn_entrar = st.form_submit_button("Entrar no Treinamento", use_container_width=True)
+            senha_input = st.text_input("Senha do Sistema", type="password")
+            btn_entrar = st.form_submit_button("Desbloquear Aplicativo", use_container_width=True)
 
             if btn_entrar:
-                if usuario_input in USUARIOS and USUARIOS[usuario_input]["senha"] == senha_input:
+                if senha_input == SENHA_MESTRE:
                     st.session_state.autenticado = True
-                    st.session_state.usuario_atual = USUARIOS[usuario_input]
-                    st.success("Login realizado com sucesso!")
+                    st.success("Sistema desbloqueado com sucesso!")
                     st.rerun()
                 else:
-                    st.error("Usuário ou senha individual incorretos.")
+                    st.error("Senha incorreta. Tente novamente.")
 
 # --- ÁREA LOGADA ---
 else:
-    usr = st.session_state.usuario_atual
-
     # Barra Lateral
     with st.sidebar:
         logo_base64 = carregar_imagem_base64("logo.jpg")
         if logo_base64:
             st.markdown(f"<div style='text-align:center;'><img src='{logo_base64}' width='160'></div>", unsafe_allow_html=True)
         st.title("Tecwater Systems")
-        st.write(f"👤 **Colaborador:** {usr['nome']}")
-        st.write(f"💼 **Função:** {usr['funcao']}")
-        st.write(f"🏢 **Unidade:** {usr['unidade']}")
+        
+        st.markdown("---")
+        st.subheader("👤 Identificação do Colaborador")
+        # Campo para o operador digitar o próprio nome livremente
+        nome_operador = st.text_input("Digite o seu Nome Completo:", value="Operador")
+        funcao_operador = st.text_input("Função / Cargo:", value="Técnico de Operação")
+        unidade_operador = st.text_input("Unidade:", value="ETEB SESC Bertioga")
+        
         st.divider()
 
         menu = st.radio(
@@ -148,11 +134,11 @@ else:
 
         st.divider()
         st.markdown("### ⚖️ Legislação Ambiental")
-        st.link_button("🌐 Consultar Decreto SP 8.468/1976", "https://www.al.sp.gov.br/norma/51080", use_container_width=True)
+        st.link_button("🌐 Consultar Decreto SP 8.468/1976", "https://www.al.sp.gov.br/repositorio/legislacao/decreto/1976/decreto-8468-08.09.1976.html", use_container_width=True)
+        st.link_button("🌐 Consultar Resolução CONAMA 430", "https://www.mprs.mp.br/media/areas/gapp/arquivos/atualizacao_intra/dou/res_conama_430.pdf", use_container_width=True)
 
-        if st.button("🚪 Sair / Trocar Usuário", use_container_width=True):
+        if st.button("🔒 Bloquear Sistema", use_container_width=True):
             st.session_state.autenticado = False
-            st.session_state.usuario_atual = None
             st.rerun()
 
     # --- ABA 1: MÓDULO DE ESTUDO (POP OFICIAL COMPLETO) ---
@@ -170,9 +156,9 @@ else:
         with tab1:
             st.subheader("TÍTULO: Análise de Ensaios de SST, SSV e SF")
             st.info("""
-            **Elaborado por:** ____________________  
-            **Revisado por:** ____________________  
-            **Aprovado por:** ____________________  
+            **Elaborado por:** Genilson Moura Barros  
+            **Revisado por:** Equipe Técnica  
+            **Aprovado por:** Supervisão Técnica  
             **Unidade:** SESC BERTIOGA | **Estado / País:** SÃO PAULO / BRASIL
             """)
 
@@ -193,90 +179,60 @@ else:
             * Analisar o desempenho da ETEB, considerando todas as informações geradas do controle de tratamento dos efluentes clarificado, incluindo requisitos legais.
             * Definir os controles necessários ao atendimento dos parâmetros de qualidade final dos efluentes tratados, determinados pela Legislação Ambiental de acordo com o **Decreto 8.468 de 1976 – Artigo 18**, para o lançamento no corpo receptor (Rio Itapanhaú).
             * Manter os registros de monitoramento dos parâmetros de controle da ETEB.
-            * Tratar junto à equipe de Manutenção quanto às demandas por manutenção de equipamentos e à Equipe do SESC Bertioga quanto à manutenção das instalações e melhorias na ETEB.
 
             **3.2 Empresa Responsável pela Operação da ETEB:**
             * Supervisionar a operação da ETEB para a realização do tratamento dos efluentes operando os equipamentos e instalações na unidade do SESC Bertioga.
             * Fazer os controles dos parâmetros de entrada e saída de efluentes tratados na ETEB, incluindo as análises químicas para verificação de conformidade legal de acordo com o Decreto 8.468 de 1976 – Artigo 18.
-            * Tratar junto à Equipe do SESC Bertioga, as necessidades de solução de problemas nos equipamentos.
-            * Apresentar os registros de operação da unidade aos responsáveis do SESC Bertioga.
-            * Garantir o cumprimento do plano de manutenção preventiva nas instalações da ETEB.
 
             **3.3 Operadores da ETEB:**
-            * Cabe à operação executar, de forma adequada, a realização das análises dos ensaios de SST (Sólidos Suspensos Totais), SSV (Sólidos Suspensos Voláteis) e SF (Sólidos Fixos), seguindo rigorosamente este procedimento, que visa estabelecer padrões e técnicas para se obter confiabilidade e precisão nos resultados obtidos através das análises realizadas no laboratório.
+            * Cabe à operação executar, de forma adequada, a realização das análises dos ensaios de SST, SSV e SF, seguindo rigorosamente este procedimento para obter confiabilidade e precisão nos resultados.
             """)
 
             st.markdown("### IV. GENERALIDADES")
             st.write("""
-            Cumprir rigorosamente este procedimento de análise de SST (Sólidos Suspensos Totais), SSV (Sólidos Suspensos Voláteis) e SF (Sólidos Fixos) para se obter um resultado de confiabilidade e com precisão a fim de determinar a necessidade de realizar o processo de desidratação do lodo biológico.
+            Cumprir rigorosamente este procedimento de análise de SST, SSV e SF para se obter um resultado de confiabilidade e com precisão a fim de determinar a necessidade de realizar o processo de desidratação do lodo biológico.
             """)
 
         with tab2:
             st.subheader("V. DESCRIÇÃO DO PROCEDIMENTO - PARTE 1 (SST)")
             st.markdown("""
-            **5.1** Para analisarmos a concentração de SST (Sólidos Suspensos Totais), deve-se coletar amostra do efluente do ponto a ser analisado mediante à necessidade operacional;
-
-            **5.2** Identificar o papel filtro com a respectiva amostra a ser analisada;
-
-            **5.3** Verificar o nível da balança analítica para que não ocorra erro na pesagem do mesmo. Se houver a necessidade, nivelar a balança analítica;
-
-            **5.4** Ligar a balança analítica no botão "LIGA / DESLIGA";
-
-            **5.5** Tarar papel filtro, utilizando-se da balança analítica com 3 casas decimais, anotando o peso tarado dos mesmos;
-
-            **5.6** Montar sistema de vácuo com Kitassato, Funil de Buckner e Compressor à Vácuo;
-
-            **5.7** Colocar papel filtro dentro do Funil de Buckner, ligar o compressor à vácuo e adicionar 10 ml da amostra, dosando com pipeta graduada ou volumétrica, sobre o papel filtro espalhando o efluente lentamente a fim de filtrar de forma rigorosa;
-
-            **5.8** Finalizado a filtração, colocar o papel filtro com a amostra filtrada na Estufa à 105°C por 1 (uma) hora;
-
-            **5.9** Após o tempo descrito acima, retirar o papel filtro com a pinça metálica da Estufa e colocá-lo no Dessecador para o resfriamento;
-
-            **5.10** Depois de 1 (uma) hora, retirar o papel filtro do Dessecador e realizar a pesagem do mesmo;
-
-            **5.11** Para obtermos o resultado do SST (Sólidos Suspensos Totais), subtrair o peso do papel filtro após a análise com o peso do papel filtro tarado e multiplicar o resultado obtido por 1000 encontrando o valor em miligramas por litro.  
-            * **Fórmula:** `SST (mg/L) = (Peso do filtro com amostra - tara do filtro) × 1000`
+            **5.1** Para analisarmos a concentração de SST (Sólidos Suspensos Totais), deve-se coletar amostra do efluente do ponto a ser analisado mediante à necessidade operacional;  
+            **5.2** Identificar o papel filtro com a respectiva amostra a ser analisada;  
+            **5.3** Verificar o nível da balança analítica para que não ocorra erro na pesagem;  
+            **5.4** Ligar a balança analítica no botão "LIGA / DESLIGA";  
+            **5.5** Tarar papel filtro, utilizando-se da balança analítica com 3 casas decimais, anotando o peso tarado;  
+            **5.6** Montar sistema de vácuo com Kitassato, Funil de Buckner e Compressor à Vácuo;  
+            **5.7** Colocar papel filtro dentro do Funil de Buckner, ligar o compressor à vácuo e adicionar 10 ml da amostra;  
+            **5.8** Finalizado a filtração, colocar o papel filtro com a amostra filtrada na Estufa à 105°C por 1 (uma) hora;  
+            **5.9** Retirar o papel filtro com a pinça metálica da Estufa e colocá-lo no Dessecador para o resfriamento;  
+            **5.10** Depois de 1 (uma) hora, retirar o papel filtro do Dessecador e realizar a pesagem;  
+            **5.11** **Fórmula:** `SST (mg/L) = (Peso do filtro com amostra - tara do filtro) × 1000`
             """)
 
         with tab3:
             st.subheader("V. DESCRIÇÃO DO PROCEDIMENTO - PARTE 2 (SSV e SF)")
             st.markdown("""
-            **5.12** Para encontrarmos o SSV (Sólidos Suspensos Voláteis), deve-se coletar amostra do efluente do ponto a ser analisado mediante à necessidade operacional;
-
-            **5.13** Identificar o cadinho com a respectiva amostra a ser analisada;
-
-            **5.14** Verificar o nível da balança analítica para que não ocorra erro na pesagem do mesmo. Se houver a necessidade, nivelar a balança analítica;
-
-            **5.15** Ligar a balança analítica no botão "LIGA / DESLIGA";
-
-            **5.16** Tarar o cadinho, utilizando-se da balança analítica com 3 casas decimais, anotando o peso tarado;
-
-            **5.17** Dosar 10 ml da amostra do efluente no cadinho utilizando pipeta graduada ou volumétrica pertencentes a um dos tanques de aeração já mencionado acima;
-
-            **5.18** Para ligar a Mufla, deve-se verificar se o equipamento está ligada na tomada 220V. Girar a chave seletora para "Acima 400 °C" e verificar se o Set-Point está programado para 550 °C apertando o PGM, caso a programação estiver fora do recomendado para esta análise, acertar o Set-Point apertando os botões ↑ ↓, conforme a necessidade do processo;
-
-            **5.19** Colocar o cadinho dentro Mufla à 550°C ± 50°C por 1 horas para processo de calcinação, utilizando a luva apropriada para altas temperaturas;
-
-            **5.20** Após o processo de calcinação e secagem, descansar a(s) amostra(s) do cadinho, no dessecador aguardando o processo de resfriamento do mesmo;
-
-            **5.21** Pesar cadinho e relacionar resultados com a tara já obtida, subtraindo o peso do cadinho mais amostra com o peso da tara do cadinho, multiplicando o resultado obtido por 100 encontrando o valor em miligramas por litro.  
-            * **Fórmula:** `SF (mg/L) = (peso do cadinho com amostra - tara do cadinho) × 1000`
-
-            **5.22** Para calcular o SSV (Sólidos Suspensos Voláteis), análise necessária para calcular o IVL (Índice Volumétrico do Lodo), utilizar a fórmula:  
-            * **Fórmula:** `SST = SSV + SF`
+            **5.12** Coletar amostra do efluente para SSV (Sólidos Suspensos Voláteis);  
+            **5.13** Identificar o cadinho com a respectiva amostra;  
+            **5.14** Verificar o nível da balança analítica;  
+            **5.15** Ligar a balança analítica;  
+            **5.16** Tarar o cadinho com balança de 3 casas decimais;  
+            **5.17** Dosar 10 ml da amostra do efluente no cadinho;  
+            **5.18** Ligar a Mufla na tomada 220V e programar o Set-Point para 550 °C;  
+            **5.19** Colocar o cadinho dentro da Mufla a 550°C ± 50°C por 1 hora para calcinação;  
+            **5.20** Descansar a amostra no dessecador para resfriamento;  
+            **5.21** **Fórmula SF:** `SF (mg/L) = (peso do cadinho com amostra - tara do cadinho) × 1000`  
+            **5.22** **Fórmula SSV:** `SST = SSV + SF`
             """)
 
         with tab4:
             st.subheader("VI. MEIO AMBIENTE E SEGURANÇA")
             st.warning("""
-            Todas as etapas de análises de SST (Sólidos Suspensos Totais), SSV (Sólidos Suspensos Voláteis) e SF (Sólidos Fixos) são necessárias para garantir a eficiência na realização de análises e obter confiabilidade e precisão nos resultados. 
-
-            A análise deverá ser realizada com a utilização correta dos EPI's recomendados:
-            * 👓 **Óculos de Segurança**
-            * 🧤 **Luva de Procedimento**
-            * 🥼 **Avental Operacional**
-            * 🛡️ **Luva de Alta Temperatura** (para manuseio na Mufla)
-            * Outros procedimentos de segurança aplicáveis.
+            Utilizar obrigatoriamente os EPIs recomendados:
+            * 👓 Óculos de Segurança
+            * 🧤 Luva de Procedimento
+            * 🥼 Avental Operacional
+            * 🛡️ Luva de Alta Temperatura (para manuseio na Mufla)
             """)
 
             st.markdown("### VII. REFERÊNCIAS")
@@ -288,7 +244,7 @@ else:
     # --- ABA 2: CALCULADORA DE PARÂMETROS ---
     elif menu == "🧮 Calculadora de Parâmetros":
         st.header("🧮 Calculadora de Parâmetros Laboratoriais")
-        st.caption("Insira os dados da análise para calcular SST, SF e SSV automaticamente.")
+        st.caption(f"Operador Responsável atual: **{nome_operador}**")
 
         col_a, col_b = st.columns(2)
         with col_a:
@@ -309,13 +265,14 @@ else:
                 st.success(f"**SST (Sólidos Suspensos Totais):** {sst:.2f} mg/L")
                 st.info(f"**SF (Sólidos Fixos):** {sf:.2f} mg/L")
                 st.info(f"**SSV (Sólidos Suspensos Voláteis):** {ssv:.2f} mg/L")
+                st.write(f"*Análise registrada para o operador: {nome_operador}*")
             else:
                 st.error("O volume da amostra deve ser maior que zero.")
 
     # --- ABA 3: AVALIAÇÃO DE CONHECIMENTO (QUIZ) ---
     elif menu == "📝 Avaliação de Conhecimento (Quiz)":
         st.header("📝 Avaliação Teórica e Operacional (10 Questões)")
-        st.write("Responda às questões. A pontuação mínima para aprovação é de **50%** (5 acertos).")
+        st.write(f"Colaborador avaliado: **{nome_operador}**. A pontuação mínima para aprovação é de **50%** (5 acertos).")
 
         with st.form("quiz_form"):
             q1 = st.radio("1. Qual legislação estadual de SP regulamenta os limites de efluentes da ETEB?", 
@@ -359,7 +316,7 @@ else:
                 st.session_state.aprovado = nota >= 50
 
                 if st.session_state.aprovado:
-                    st.success(f"🎉 Parabéns, {usr['nome']}! Você acertou {acertos} de 10 perguntas (Nota {nota:.0f}%) e foi APROVADO!")
+                    st.success(f"🎉 Parabéns, {nome_operador}! Você acertou {acertos} de 10 perguntas (Nota {nota:.0f}%) e foi APROVADO!")
                     st.balloons()
                 else:
                     st.error(f"Sua nota foi {nota:.0f}% ({acertos} acertos). A nota mínima é 50%. Tente novamente.")
@@ -380,11 +337,11 @@ else:
                     {"<img src='" + logo_src + "' width='140' style='margin-bottom:10px;'><br>" if logo_src else ""}
                     <h2 style="margin: 0; color: #0284c7; letter-spacing: 1px;">TECWATER SYSTEMS</h2>
                     <h3 style="margin: 10px 0 0 0; color: #1e293b;">COMPROVANTE DE CAPACITAÇÃO OPERACIONAL</h3>
-                    <p style="margin: 5px 0 0 0; color: #64748b; font-size: 14px;">ETEB SESC BERTIOGA</p>
+                    <p style="margin: 5px 0 0 0; color: #64748b; font-size: 14px;">{unidade_operador}</p>
                 </div>
                 <hr style="border: none; border-top: 1px solid #cbd5e1; margin: 25px 0;">
                 <p style="font-size: 16px; line-height: 1.8; text-align: center; color: #334155;">
-                    Certificamos que o(a) operador(a) <b>{usr['nome']}</b> concluiu com êxito o treinamento teórico-prático referente ao procedimento de <b>Análise de SST, SSV e SF</b>, obtendo aproveitamento de <b>{nota_obtida:.0f}%</b> na avaliação.
+                    Certificamos que o(a) colaborador(a) <b>{nome_operador}</b> (Função: <b>{funcao_operador}</b>) concluiu com êxito o treinamento teórico-prático referente ao procedimento de <b>Análise de SST, SSV e SF</b>, obtendo aproveitamento de <b>{nota_obtida:.0f}%</b> na avaliação.
                 </p>
                 <div style="display: flex; justify-content: space-around; margin-top: 40px; text-align: center;">
                     <div>
@@ -406,7 +363,8 @@ else:
             col_pdf, col_print = st.columns([1, 1])
             
             with col_pdf:
-                arquivo_pdf = gerar_pdf_certificado(usr['nome'], usr['funcao'], usr['unidade'], nota_obtida)
+                # Gera o PDF puxando dinamicamente o nome digitado pelo operador
+                arquivo_pdf = gerar_pdf_certificado(nome_operador, funcao_operador, unidade_operador, nota_obtida)
                 
                 with open(arquivo_pdf, "rb") as pdf_file:
                     st.download_button(
